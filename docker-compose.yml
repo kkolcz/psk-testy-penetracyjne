@@ -10,6 +10,7 @@ services:
     restart: always
     volumes:
       - ./files/app_files:/home/kowalski/app_files:rw
+      - uploads:/var/www/html/uploads:rw
 
   angular_frontend:
     build:
@@ -27,6 +28,12 @@ services:
       dockerfile: Dockerfile
     ports:
       - '8082:8080'
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=db;Database=TestyPen;User=sa;Password=Password123!;MultipleActiveResultSets=true;TrustServerCertificate=true
+      - FileUploadSettings__StoragePath=/app/uploads
+    volumes:
+      - uploads:/app/uploads
 
   db:
     image: mcr.microsoft.com/mssql/server:2019-latest
@@ -50,3 +57,4 @@ services:
 
 volumes:
   sqldata:
+  uploads:
