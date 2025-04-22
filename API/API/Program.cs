@@ -1,25 +1,150 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Data.SqlClient;
+using System;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = long.MaxValue; 
+});
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
+        c.RoutePrefix = string.Empty;
+    });
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
+
+InitializeDatabase(app.Configuration.GetConnectionString("DefaultConnection"));
+
 app.Run();
+
+void InitializeDatabase(string connectionString)
+{
+    try
+    {
+        
+        
+        var masterConnectionString = new SqlConnectionStringBuilder(connectionString)
+        {
+            InitialCatalog = "master"
+        }.ConnectionString;
+
+        using (var connection = new SqlConnection(masterConnectionString))
+        {
+            connection.Open();
+            using (var command = new SqlCommand(
+            "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'TestyPen') " +
+            "CREATE DATABASE TestyPen", connection))
+            {
+                command.ExecuteNonQuery();
+            }
+        }
+
+        
+        using (var connection = new SqlConnection(connectionString))
+        {
+            connection.Open();
+
+            
+            using (var command = new SqlCommand(@"
+                IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Users')
+                CREATE TABLE Users (
+                    Id INT IDENTITY(1,1) PRIMARY KEY,
+                    Username NVARCHAR(100) NOT NULL,
+                    Email NVARCHAR(100) NOT NULL,
+                    Password NVARCHAR(100) NOT NULL
+                )", connection))
+            {
+                command.ExecuteNonQuery();
+            }
+
+            
+            using (var command = new SqlCommand(@"
+                IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Products')
+                CREATE TABLE Products (
+                    Id INT IDENTITY(1,1) PRIMARY KEY,
+                    Name NVARCHAR(100) NOT NULL,
+                    Description NVARCHAR(MAX),
+                    Price DECIMAL(10,2) NOT NULL,
+                    StockQuantity INT NOT NULL
+                )", connection))
+            {
+                command.ExecuteNonQuery();
+            }
+
+            
+            using (var command = new SqlCommand(@"
+                IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'FileUploads')
+                CREATE TABLE FileUploads (
+                    Id INT IDENTITY(1,1) PRIMARY KEY,
+                    FileName NVARCHAR(255) NOT NULL,
+                    FilePath NVARCHAR(500) NOT NULL,
+                    ContentType NVARCHAR(100) NOT NULL,
+                    FileSize BIGINT NOT NULL,
+                    UploadedAt DATETIME NOT NULL,
+                    UserId INT NULL,
+                    FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE SET NULL
+                )", connection))
+            {
+                command.ExecuteNonQuery();
+            }
+
+            
+            using (var checkCommand = new SqlCommand("SELECT COUNT(*) FROM Users", connection))
+            {
+                var count = (int)checkCommand.ExecuteScalar();
+                if (count == 0)
+                {
+                    using (var command = new SqlCommand(@"
+                        INSERT INTO Users (Username, Email, Password) VALUES
+                        ('admin', 'admin@example.com', 'admin123'),
+                        ('user1', 'user1@example.com', 'password123')", connection))
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                }
+            }
+
+            using (var checkCommand = new SqlCommand("SELECT COUNT(*) FROM Products", connection))
+            {
+                var count = (int)checkCommand.ExecuteScalar();
+                if (count == 0)
+                {
+                    using (var command = new SqlCommand(@"
+                        INSERT INTO Products (Name, Description, Price, StockQuantity) VALUES
+                        ('Laptop', 'High performance laptop', 999.99, 50),
+                        ('Smartphone', 'Latest model smartphone', 499.99, 100),
+                        ('Headphones', 'Noise cancelling headphones', 149.99, 200)", connection))
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                }
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Database initialization failed: {ex.Message}");
+    }
+}
