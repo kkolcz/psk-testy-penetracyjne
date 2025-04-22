@@ -88,10 +88,8 @@ namespace API.Controllers
                 var id = Convert.ToInt32(command.ExecuteScalar());
                 user.Id = id;
                 
-                // Generate JWT token
                 var token = _jwtTokenService.GenerateToken(user);
                 
-                // Return token with user info
                 var response = new AuthenticationResponse
                 {
                     Id = user.Id,

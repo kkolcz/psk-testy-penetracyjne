@@ -62,7 +62,6 @@ app.UseSwaggerUI(c =>
 
 app.UseHttpsRedirection();
 
-// Add authentication middleware
 app.UseAuthentication();
 app.UseAuthorization();
 
