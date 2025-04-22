@@ -48,7 +48,7 @@ namespace API.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize]
+
         public ActionResult<User> GetUserById(int id)
         {
             using (var connection = new SqlConnection(_connectionString))
