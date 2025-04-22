@@ -3,14 +3,45 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Data.SqlClient;
 using System;
+using API.Models;
+using API.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+var key = Encoding.ASCII.GetBytes(jwtSettings.Secret);
+
+
+builder.Services.AddAuthentication(x =>
+{
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(x =>
+{
+    x.RequireHttpsMetadata = false;
+    x.SaveToken = true;
+    x.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidIssuer = jwtSettings.Issuer,
+        ValidAudience = jwtSettings.Audience,
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+builder.Services.AddScoped<JwtTokenService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
 
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
@@ -18,7 +49,6 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(optio
 });
 
 var app = builder.Build();
-
 
 if (app.Environment.IsDevelopment())
 {
@@ -31,9 +61,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseAuthorization();
-app.MapControllers();
 
+// Add authentication middleware
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
 
 InitializeDatabase(app.Configuration.GetConnectionString("DefaultConnection"));
 
@@ -43,8 +76,6 @@ void InitializeDatabase(string connectionString)
 {
     try
     {
-        
-        
         var masterConnectionString = new SqlConnectionStringBuilder(connectionString)
         {
             InitialCatalog = "master"
@@ -61,12 +92,10 @@ void InitializeDatabase(string connectionString)
             }
         }
 
-        
         using (var connection = new SqlConnection(connectionString))
         {
             connection.Open();
 
-            
             using (var command = new SqlCommand(@"
                 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Users')
                 CREATE TABLE Users (
@@ -79,7 +108,6 @@ void InitializeDatabase(string connectionString)
                 command.ExecuteNonQuery();
             }
 
-            
             using (var command = new SqlCommand(@"
                 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Products')
                 CREATE TABLE Products (
@@ -93,7 +121,6 @@ void InitializeDatabase(string connectionString)
                 command.ExecuteNonQuery();
             }
 
-            
             using (var command = new SqlCommand(@"
                 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'FileUploads')
                 CREATE TABLE FileUploads (
@@ -110,7 +137,6 @@ void InitializeDatabase(string connectionString)
                 command.ExecuteNonQuery();
             }
 
-            
             using (var checkCommand = new SqlCommand("SELECT COUNT(*) FROM Users", connection))
             {
                 var count = (int)checkCommand.ExecuteScalar();
