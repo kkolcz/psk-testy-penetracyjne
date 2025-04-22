@@ -1,0 +1,7 @@
+{
+	"host": "localhost",
+	"port": 1433,
+	"user": "sa",
+	"password": "Password123!",
+	"database": "prod_database"
+}

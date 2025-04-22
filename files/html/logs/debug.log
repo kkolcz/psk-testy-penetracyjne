@@ -1,0 +1,3 @@
+[DEBUG] Auth token: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+[DEBUG] Connection to DB successful.
+[ERROR] Invalid login for user 'test'
