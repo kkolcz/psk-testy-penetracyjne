@@ -6,3 +6,4 @@
 4. Insecure File Upload
 5. SQL Injection
 6. Insecure Direct Object Reference (IDOR)
+7. Broken Access Control
