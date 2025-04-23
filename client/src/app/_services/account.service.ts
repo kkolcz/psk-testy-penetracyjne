@@ -14,7 +14,6 @@ export class AccountService {
   currentUser = signal<User | null>(null)
 
   login(model: any) {
-    return this.http.post<User>(this.baseUrl + "account/login", model).pipe(
     return this.http.post<User>(this.baseUrl + "Users/login", model).pipe(
       map(user => {
         if (user) {
