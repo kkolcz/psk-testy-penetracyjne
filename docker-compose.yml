@@ -19,6 +19,8 @@ services:
     container_name: angular_frontend
     ports:
       - '8081:80'
+    depends_on:
+      - aspnet_backend
     restart: always
 
   aspnet_backend:
@@ -34,6 +36,9 @@ services:
       - FileUploadSettings__StoragePath=/app/uploads
     volumes:
       - uploads:/app/uploads
+    depends_on:
+      - db
+    restart: always
 
   db:
     image: mcr.microsoft.com/mssql/server:2019-latest
@@ -54,6 +59,8 @@ services:
     environment:
       - ADMINER_DEFAULT_SERVER=db
     restart: always
+    depends_on:
+      - db
 
 volumes:
   sqldata:
