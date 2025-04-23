@@ -56,8 +56,20 @@ RUN echo "kowalski ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 RUN a2enmod php8.1 && service apache2 restart
 
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# COPY ./entrypoint.sh /entrypoint.sh
+# RUN chmod +x /entrypoint.sh
+
+RUN echo '#!/bin/bash\n\
+\n\
+echo "[*] Starting Apache..."\n\
+service apache2 start\n\
+\n\
+echo "[*] Starting OpenSSH Server..."\n\
+ssh-keygen -A\n\
+/usr/sbin/sshd\n\
+\n\
+tail -f /dev/null' > /entrypoint.sh && \
+    chmod +x /entrypoint.sh
 
 
 EXPOSE 2222 80
