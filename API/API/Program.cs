@@ -101,7 +101,8 @@ void InitializeDatabase(string connectionString)
                     Id INT IDENTITY(1,1) PRIMARY KEY,
                     Username NVARCHAR(100) NOT NULL,
                     Email NVARCHAR(100) NOT NULL,
-                    Password NVARCHAR(100) NOT NULL
+                    Password NVARCHAR(100) NOT NULL,
+                    UserRole NVARCHAR(100) NOT NULL
                 )", connection))
             {
                 command.ExecuteNonQuery();

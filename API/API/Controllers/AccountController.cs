@@ -31,10 +31,11 @@ namespace API.Controllers
             }
 
             var insertCmd = new SqlCommand(
-                "INSERT INTO Users (Username, Email, Password) VALUES (@username, @email, @password)", connection);
+                "INSERT INTO Users (Username, Email, Password, UserRole) VALUES (@username, @email, @password, @userRole)", connection);
             insertCmd.Parameters.AddWithValue("@username", registerDto.Username);
             insertCmd.Parameters.AddWithValue("@email", registerDto.Username + "@tu.kielce.pl");
             insertCmd.Parameters.AddWithValue("@password", registerDto.Password); 
+            insertCmd.Parameters.AddWithValue("@userRole", registerDto.UserRole); 
 
             insertCmd.ExecuteNonQuery();
 

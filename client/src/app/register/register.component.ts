@@ -17,6 +17,7 @@ export class RegisterComponent {
   model: any = {}
 
   register(){
+    this.model.userRole = "User";
     this.accountService.register(this.model).subscribe({
       next: response =>{
         console.log(response)
