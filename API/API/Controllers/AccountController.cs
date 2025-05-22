@@ -71,5 +71,33 @@ namespace API.Controllers
 
             return Ok(user);
         }
+
+        [HttpPost("login-insecure")]
+        public IActionResult LoginInsecure([FromBody] LoginDto loginRequest)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            connection.Open();
+
+            var sql = $"SELECT Id, Username, Email FROM Users WHERE Username = '{loginRequest.Username}' AND Password = '{loginRequest.Password}'";
+
+            var command = new SqlCommand(sql, connection);
+            using var reader = command.ExecuteReader();
+
+            if (!reader.Read())
+            {
+                return Unauthorized("Invalid username or password");
+            }
+
+            var user = new User
+            {
+                Id = reader.GetInt32(0),
+                Username = reader.GetString(1),
+                Email = reader.GetString(2),
+                Password = null
+            };
+
+            return Ok(user);
+        }
+
     }
 }
