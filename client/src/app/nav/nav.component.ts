@@ -26,14 +26,6 @@ export class NavComponent {
     });
   }
 
-  loginBruteForce() {
-    this.accountService.loginBruteForce(this.model).subscribe({
-      next: response => {
-      },
-      error: error => this.toastr.error(error.error)
-    });
-  }
-
   logout(){
     this.accountService.logout();
     this.router.navigateByUrl('/');
