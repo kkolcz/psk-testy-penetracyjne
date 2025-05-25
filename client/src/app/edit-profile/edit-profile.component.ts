@@ -1,19 +1,22 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, inject, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, ElementRef, inject, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { AccountService } from '../_services/account.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { environment } from '../../environments/environment';
+import { ActivatedRoute } from '@angular/router';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-edit-profile',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './edit-profile.component.html',
   styleUrl: './edit-profile.component.css',
 
 
 })
-export class EditProfileComponent {
+export class EditProfileComponent implements OnInit {
+ 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   avatarUrl: string | null = null; 
@@ -23,6 +26,27 @@ export class EditProfileComponent {
   accountService = inject(AccountService)
   sanitizer = inject(DomSanitizer);
   usernamePreview: SafeHtml = ''; 
+  route = inject(ActivatedRoute);
+  userId: string | null = null;
+  ngOnInit(): void {
+   this.userId = this.route.snapshot.paramMap.get('id');
+    if (this.userId) {
+      this.loadAvatar(this.userId);
+    } 
+   }
+ loadAvatar(userId: string) {
+    this.http
+      .get<{ filePath: string }>(environment.url + `/api/account/getAvatar?userId=${userId}`)
+      .subscribe({
+        next: (res) => {
+          this.avatarUrl = environment.url + res.filePath;
+        },
+        error: () => {
+          console.warn('No avatar found or failed to load avatar.');
+          this.avatarUrl = null;
+        },
+      });
+  }
 
   triggerFileInput() {
     this.fileInput.nativeElement.click();
@@ -76,14 +100,13 @@ export class EditProfileComponent {
     const currentUser = this.accountService.currentUser(); 
     const username = currentUser?.username ? currentUser.username : "";
         const formData = new FormData();
-
     const manipulatedFileName = `${this.selectedFile.name}`; //hardoce path traversal
     const manipulatedFile = new File([this.selectedFile], manipulatedFileName, {
     type: this.selectedFile.type,
     });
 
    formData.append('avatar', manipulatedFile);
-   formData.append('userId', username ); 
+   formData.append('userId', this.userId ?? ''); 
 
     this.http.post(environment.url + '/api/account/setAvatar', formData).subscribe({
       next: (response) => {

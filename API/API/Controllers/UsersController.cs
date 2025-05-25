@@ -22,7 +22,6 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        [Authorize]
         public ActionResult<IEnumerable<User>> GetUsers()
         {
             using (var connection = new SqlConnection(_connectionString))

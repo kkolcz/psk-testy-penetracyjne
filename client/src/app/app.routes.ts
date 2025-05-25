@@ -25,7 +25,7 @@ export const routes: Routes = [
             { path: 'products', component: ProductsComponent },
             { path: 'cart', component: CartComponent },
             { path: 'cart/:id', component: CartIdComponent },
-            { path: 'edit-profile', component: EditProfileComponent}
+            { path: 'edit-profile/:id', component: EditProfileComponent}
         ]
     },
     {path: 'errors', component:TestErrorsComponent},
