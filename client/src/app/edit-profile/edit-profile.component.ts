@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, inject, ViewChild, ViewEncapsulation } from '@angular/core';
 import { AccountService } from '../_services/account.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-edit-profile',
@@ -84,7 +85,7 @@ export class EditProfileComponent {
    formData.append('avatar', manipulatedFile);
    formData.append('userId', username ); 
 
-    this.http.post('http://localhost:5000/api/account/setAvatar', formData).subscribe({
+    this.http.post(environment.url + '/api/account/setAvatar', formData).subscribe({
       next: (response) => {
         console.log('res:', response);
       },

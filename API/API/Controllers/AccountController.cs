@@ -99,5 +99,24 @@ namespace API.Controllers
             return Ok(user);
         }
 
+        [HttpPost("setAvatar")]
+        public async Task<IActionResult> SetAvatar(IFormFile avatar, [FromForm] string userId)
+        {
+            if (avatar == null || avatar.Length == 0)
+                return BadRequest("No file uploaded.");
+
+            var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            Directory.CreateDirectory(uploadsPath); 
+
+            var filePath = Path.Combine(uploadsPath, avatar.FileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await avatar.CopyToAsync(stream);
+            }
+
+            return Ok(new { message = "File uploaded", file = avatar.FileName });
+        }
+
     }
 }
